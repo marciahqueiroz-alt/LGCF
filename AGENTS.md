@@ -1,0 +1,21 @@
+
+## Architecture rules
+- Database changes are SQL files in `supabase/migrations` (timestamped, applied in order); `supabase/setup.sql` is the same SQL concatenated for a fresh project. Regenerate it whenever a migration is added.
+- Build uses plain Vite + TanStack Start + Nitro (`vite.config.ts`); Nitro picks the hosting preset automatically or from `NITRO_PRESET`.
+- Request status changes go only through `transitionRequest` server fn using the pure state machine in `src/lib/workflow.ts` (tested); RLS lets owners edit only drafts, so clients can never set statuses directly.
+- Roles live in protected `public.user_roles`; signup defaults stay in the existing trigger and role assignments require server-validated Admin access, preventing editable metadata from granting privileges.
+- Signup never grants Admin, even when no admin exists. If every admin is lost, restore one manually in SQL: `insert into public.user_roles (user_id, role) select id, 'admin' from auth.users where email = '<email>';`
+- Admin is the only role that assigns roles, and it mediates the whole process: it may perform every workflow step on any request, including its own; `useMe().is()` treats Admin as every role.
+- Segregation of duties: for non-admin users, Financeiro actions (review, pay, deposit, return for correction, confirm return, reject in review) are refused on the actor's own request. Diretoria may approve or reject any request, including its own.
+- Expense-payment approval uses distinct finance-review and director-approval states in the shared state machine; initial advance-budget approval remains separate, and conditional status updates prevent concurrent actions from skipping stages.
+- Receipt photos go to the private `receipts` bucket under `<userId>/...`; receipt reading is the `scanReceipt` server fn calling OpenAI directly (`OPENAI_API_KEY`, optional `OPENAI_MODEL`).
+- Storage deletes go through `public.receipt_file_locked`: expense receipt files can be removed only while their request is editable by the owner, and return-proof files never.
+- Return proofs are append-only rows in `return_receipts`, uploaded by the owner while awaiting return and stored privately under `<userId>/<requestId>/returns/`; RLS permits staff to read them.
+- A database trigger captures and preserves `original_requested_amount` at advance creation or first reimbursement submission; settlement totals never replace that snapshot.
+- Expense receipt previews use authenticated Storage downloads in an in-app dialog; PDF.js and its worker load only in a browser effect to avoid SSR evaluation and popup blocking.
+- Registration normalizes CPF into the protected profile through the existing signup trigger; role assignment remains independent of editable signup metadata.
+- `profiles.cpf` has no column SELECT grant for `authenticated`: always select explicit profile columns (never `*`) and read CPF only through `profile_cpf()` (owner, Financeiro or Admin).
+- Duplicate receipts: `expenses.receipt_hash` (SHA-256 of the original file) is blocked by trigger across non-rejected requests; `expense_duplicates()` flags same file or same date + amount + establishment, with other people's request details only for staff.
+- AI receipt readings are logged in `receipt_scans` by the server fn and limited per user (`SCAN_LIMITS` in `requests.functions.ts`).
+- Submitting a request (`enviar`) e-mails every Financeiro user via Resend in `notify.server.ts` (secrets `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, optional `APP_URL`); e-mail failures are logged and never block the transition.
+- Excel export is built in the browser by `src/lib/export-request.ts` with `exceljs`, loaded on demand.

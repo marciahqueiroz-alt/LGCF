@@ -1,0 +1,2 @@
+DROP POLICY "delete own receipts" ON storage.objects;
+CREATE POLICY "delete own receipts" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'receipts' AND (storage.foldername(name))[1] = auth.uid()::text AND NOT EXISTS (SELECT 1 FROM public.return_receipts proof WHERE proof.receipt_path = name));

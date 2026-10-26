@@ -1,0 +1,17 @@
+# Tasks
+- [ ] Adicionar o perfil Colaborador na atribuição de acessos.
+- [ ] Exigir conferência financeira antes da aprovação de pagamento pela Diretoria.
+- [ ] Verificar o retorno ao Financeiro para registrar o pagamento.
+- [x] Excluir a conta antiga não confirmada, preservando a conta corporativa.
+- [x] Manter a opção existente de reenviar a confirmação por e-mail.
+- [x] Explicar como cadastrar pessoas e atribuir Gerente, Diretoria e Financeiro.
+- [x] Publicar o app e deixá-lo instalável na tela inicial do celular.
+- [x] Confirmar com uma foto real que a leitura automática extrai estabelecimento, data e valor.
+- [x] Renomear o endereço publicado para rota-despesas-lgcf.
+- [x] Permitir ao gerente anexar comprovante da devolução à empresa.
+- [x] Preservar e mostrar o valor originalmente solicitado.
+- [x] Verificar o envio e a consulta do comprovante na solicitação.
+- [x] Verificar a liberação de pagamento para Márcia.
+- [x] Mostrar valores por categoria além do total.
+- [x] Corrigir a abertura do recibo da solicitação de Mayara.
+- [x] Solicitar CPF no cadastro.
